@@ -1,0 +1,26 @@
+{
+    "name": "ROS2 Dev Container",
+    "image": "osrf/ros:jazzy-desktop-full",
+    "runArgs": [
+      "--network=host",
+      "--privileged"
+    ],
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash",
+      "editor.formatOnSave": true
+    },
+    "extensions": [
+      "ms-python.python",
+      "ms-vscode.cpptools",
+      "ms-iot.vscode-ros"
+    ],
+    "mounts": [
+      "source=${localWorkspaceFolder}/workspace,target=/workspace,type=bind",
+      "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
+    ],
+    "remoteUser": "root",
+    "postCreateCommand": "echo 'source /opt/ros/jazzy/setup.bash' >> ~/.bashrc",
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind"
+  }
+  
