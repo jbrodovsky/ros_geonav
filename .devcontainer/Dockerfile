@@ -1,22 +1,38 @@
 FROM osrf/ros:jazzy-desktop-full
 
-SHELL [ "/bin/bash" , "-c" ]
+# Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
+# Since Ubuntu 24.04, a non-root user is created by default with the name vscode and UID=1000
+ARG USERNAME=ubuntu
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+RUN if ! id -u $USER_UID >/dev/null 2>&1; then \
+        groupadd --gid $USER_GID $USERNAME && \
+        useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME; \
+    fi
+# Add sudo support for the non-root user
+RUN apt-get update && \
+    apt-get install -y sudo && \
+    echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Upgrade all packages
+# Switch from root to user
+USER $USERNAME
+
+# Add user to video group to allow access to webcam
+RUN sudo usermod --append --groups video $USERNAME
+
+# Update all packages
 RUN sudo apt update && sudo apt upgrade -y
 
-# Install essential packages
-RUN sudo apt install -y wget
+# Install Git
+RUN sudo apt install -y git
 
-# Create overlay workspace
-WORKDIR /root/ros_ws/src
-COPY packages.repos .
+# Rosdep update
+RUN rosdep update
 
-RUN vcs import < packages.repos; \
-    cd ..; \
-    rosdep install --from-paths src --ignore-src -r -y; \
-    source /opt/ros/${ROS_DISTRO}/setup.bash; \
-    colcon build;
-
-# Add sourcing ROS setup.bash to .bashrc
+# Source the ROS setup file
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
+
+################################
+## ADD ANY CUSTOM SETUP BELOW ##
+################################
